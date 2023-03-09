@@ -1,8 +1,8 @@
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 const startBtn = document.querySelector('[data-start]');
-startBtn.setAttribute('disabled', '');
 const myInput = document.querySelector('input#datetime-picker');
 const timerEl = {
   days: document.querySelector('[data-days]'),
@@ -12,21 +12,28 @@ const timerEl = {
 };
 
 startBtn.addEventListener('click', onStartBtnClick);
+const defaultDate = new Date();
+let finalDate = defaultDate;
 
-let finalDate = null;
+function checkBtnAvailability() {
+  if (finalDate <= new Date()) {
+    startBtn.setAttribute('disabled', '');
+  } else {
+    startBtn.removeAttribute('disabled', '');
+  }
+}
+checkBtnAvailability();
+
 const options = {
   enableTime: true,
   time_24hr: true,
-  defaultDate: new Date(),
+  defaultDate,
   minuteIncrement: 1,
-  onClose(selectedDates) {
-    finalDate = selectedDates[0].getTime();
-
-    if (finalDate < this.now.getTime()) {
-      alert('Please choose a date in the future');
-      startBtn.setAttribute('disabled', '');
-    } else {
-      startBtn.removeAttribute('disabled', '');
+  onChange([selectedDate]) {
+    finalDate = selectedDate;
+    checkBtnAvailability();
+    if (finalDate <= new Date()) {
+      Notify.failure('Please choose a date in the future');
     }
   },
 };
@@ -59,14 +66,16 @@ function updateTimerEl({ days, hours, minutes, seconds }) {
 }
 
 function onStartBtnClick() {
-  const intervalId = setInterval(() => {
+  const updateTimer = () => {
     const currentTime = Date.now();
-    const leftTime = finalDate - currentTime;
+    const leftTime = finalDate.getTime() - currentTime;
     if (leftTime > 0) {
       const formatTime = convertMs(leftTime);
       updateTimerEl(formatTime);
     } else {
       clearInterval(intervalId);
     }
-  }, 1000);
+  };
+  updateTimer();
+  const intervalId = setInterval(updateTimer, 1000);
 }
