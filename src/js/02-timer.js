@@ -14,6 +14,7 @@ const timerEl = {
 startBtn.addEventListener('click', onStartBtnClick);
 const defaultDate = new Date();
 let finalDate = defaultDate;
+let intervalId = null;
 
 function checkBtnAvailability() {
   if (finalDate <= new Date()) {
@@ -23,6 +24,11 @@ function checkBtnAvailability() {
   }
 }
 checkBtnAvailability();
+
+function stopTimer() {
+  clearInterval(intervalId);
+  updateTimerEl(convertMs(0));
+}
 
 const options = {
   enableTime: true,
@@ -35,6 +41,7 @@ const options = {
     if (finalDate <= new Date()) {
       Notify.failure('Please choose a date in the future');
     }
+    stopTimer();
   },
 };
 flatpickr(myInput, options);
@@ -73,9 +80,9 @@ function onStartBtnClick() {
       const formatTime = convertMs(leftTime);
       updateTimerEl(formatTime);
     } else {
-      clearInterval(intervalId);
+      stopTimer();
     }
   };
   updateTimer();
-  const intervalId = setInterval(updateTimer, 1000);
+  intervalId = setInterval(updateTimer, 1000);
 }
